@@ -1,0 +1,2076 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>전력ON - 교실 전력 관리</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #dfeaff;
+  font-family: Arial, "Noto Sans KR", sans-serif;
+  color: #172b4d;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+}
+
+.app {
+  width: 100%;
+  max-width: 440px;
+  min-height: 100vh;
+  margin: auto;
+  background: #f4f8ff;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 화면 */
+.screen {
+  display: none;
+  min-height: 100vh;
+  padding-bottom: 90px;
+}
+
+.screen.active {
+  display: block;
+}
+
+/* 상단 */
+.top {
+  padding: 28px 20px 18px;
+  color: white;
+  background: linear-gradient(135deg, #2878ff, #70b3ff);
+  border-radius: 0 0 28px 28px;
+}
+
+.top h1 {
+  margin: 0 0 6px;
+  font-size: 23px;
+}
+
+.top p {
+  margin: 0;
+  font-size: 13px;
+  opacity: .9;
+}
+
+.top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.icon-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  color: white;
+  background: rgba(255,255,255,.2);
+}
+
+.room-select {
+  margin-top: 18px;
+  padding: 14px;
+  background: white;
+  color: #172b4d;
+  border-radius: 16px;
+  font-weight: bold;
+}
+
+/* 내용 */
+.content {
+  padding: 18px 16px;
+}
+
+.card {
+  background: white;
+  border: 1px solid #e4ecf7;
+  border-radius: 20px;
+  padding: 17px;
+  margin-bottom: 14px;
+  box-shadow: 0 8px 25px rgba(40,90,150,.08);
+}
+
+.section-title {
+  font-size: 15px;
+  font-weight: bold;
+  margin-bottom: 12px;
+}
+
+/* 통계 */
+.mini-grid {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 8px;
+}
+
+.mini {
+  padding: 12px 4px;
+  text-align: center;
+  background: #f7faff;
+  border-radius: 15px;
+}
+
+.mini .num {
+  margin: 5px 0;
+  font-size: 17px;
+  font-weight: bold;
+}
+
+.mini small {
+  color: #7c8ba5;
+  font-size: 10px;
+}
+
+/* 기기 */
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(4,1fr);
+  gap: 8px;
+}
+
+.device {
+  padding: 11px 3px;
+  text-align: center;
+  background: #f8fbff;
+  border: 1px solid #e5edf8;
+  border-radius: 15px;
+}
+
+.device .emoji {
+  font-size: 23px;
+}
+
+.device b {
+  display: block;
+  margin-top: 5px;
+  font-size: 11px;
+}
+
+.device span {
+  font-size: 10px;
+}
+
+.on {
+  color: #18b878;
+}
+
+.off {
+  color: #8c99ac;
+}
+
+/* 경고 */
+.alert {
+  display: flex;
+  gap: 10px;
+  padding: 14px;
+  margin-bottom: 14px;
+  background: #fff0f2;
+  border: 1px solid #ffd5da;
+  border-radius: 16px;
+  color: #d83c4e;
+  font-size: 12px;
+}
+
+.alert strong {
+  display: block;
+  margin-bottom: 3px;
+}
+
+/* 빠른 메뉴 */
+.quick-grid {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 10px;
+}
+
+.quick {
+  padding: 13px 5px;
+  background: white;
+  border: 1px solid #e4ecf7;
+  border-radius: 17px;
+  box-shadow: 0 8px 20px rgba(40,90,150,.08);
+}
+
+.quick i {
+  display: flex;
+  width: 40px;
+  height: 40px;
+  margin: auto auto 7px;
+  justify-content: center;
+  align-items: center;
+  background: #eaf2ff;
+  border-radius: 13px;
+  font-style: normal;
+  font-size: 20px;
+}
+
+.quick b {
+  font-size: 11px;
+}
+
+/* 점수 */
+.score-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.score {
+  color: #2878ff;
+  font-size: 30px;
+  font-weight: 900;
+}
+
+.progress {
+  height: 9px;
+  margin-top: 10px;
+  overflow: hidden;
+  background: #edf2f8;
+  border-radius: 99px;
+}
+
+.progress div {
+  height: 100%;
+  background: linear-gradient(90deg,#20bd7d,#62dfaa);
+  border-radius: 99px;
+  transition: .3s;
+}
+
+/* 버튼 */
+.action {
+  width: 100%;
+  height: 48px;
+  margin-top: 12px;
+  border-radius: 15px;
+  color: white;
+  background: linear-gradient(135deg,#2878ff,#4e9aff);
+  font-weight: bold;
+}
+
+.secondary {
+  color: #2878ff;
+  background: #edf4ff;
+}
+
+/* 폼 */
+.form-label {
+  display: block;
+  margin: 14px 2px 7px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.input,
+.select {
+  width: 100%;
+  height: 46px;
+  padding: 0 13px;
+  border: 1px solid #e0e8f3;
+  border-radius: 13px;
+  background: #fbfdff;
+  outline: none;
+}
+
+.input:focus,
+.select:focus {
+  border-color: #70a8ff;
+}
+
+/* 계산 결과 */
+.result {
+  margin-top: 14px;
+  padding: 17px;
+  background: #edf6ff;
+  border: 1px solid #d7e8ff;
+  border-radius: 18px;
+}
+
+.result .big {
+  color: #2878ff;
+  font-size: 28px;
+  font-weight: 900;
+}
+
+.result small {
+  color: #7c8ba5;
+}
+
+/* 체크리스트 */
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 2px;
+  border-bottom: 1px solid #e5edf8;
+}
+
+.toggle-row:last-child {
+  border-bottom: none;
+}
+
+.toggle-info {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.toggle-icon {
+  display: flex;
+  width: 42px;
+  height: 42px;
+  justify-content: center;
+  align-items: center;
+  background: #edf5ff;
+  border-radius: 13px;
+  font-size: 20px;
+}
+
+.toggle-info b {
+  display: block;
+  font-size: 14px;
+}
+
+.toggle-info small {
+  color: #7c8ba5;
+  font-size: 10px;
+}
+
+.switch {
+  width: 48px;
+  height: 28px;
+  padding: 3px;
+  background: #dce5f1;
+  border-radius: 99px;
+}
+
+.switch::after {
+  content: "";
+  display: block;
+  width: 22px;
+  height: 22px;
+  background: white;
+  border-radius: 50%;
+  transition: .2s;
+}
+
+.switch.on {
+  background: #25bf7e;
+}
+
+.switch.on::after {
+  transform: translateX(20px);
+}
+
+.complete {
+  padding: 17px;
+  color: #15985f;
+  background: #eafff5;
+  border: 1px solid #b9f0d3;
+  border-radius: 18px;
+  text-align: center;
+  font-weight: bold;
+}
+
+/* 신고 */
+.report-item {
+  display: flex;
+  gap: 11px;
+  align-items: flex-start;
+  padding: 13px 0;
+  border-bottom: 1px solid #e5edf8;
+}
+
+.report-item:last-child {
+  border-bottom: none;
+}
+
+.badge {
+  padding: 5px 8px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: bold;
+}
+
+.wait {
+  color: #e34d60;
+  background: #fff0f2;
+}
+
+.done {
+  color: #15985f;
+  background: #e8fbf2;
+}
+
+.report-item b {
+  font-size: 13px;
+}
+
+.report-item p {
+  margin: 4px 0 0;
+  color: #7c8ba5;
+  font-size: 10px;
+}
+
+/* 통계 */
+.stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.stat {
+  padding: 14px;
+  background: #fbfdff;
+  border: 1px solid #e4ecf7;
+  border-radius: 16px;
+}
+
+.stat span {
+  color: #7c8ba5;
+  font-size: 10px;
+}
+
+.stat b {
+  display: block;
+  margin-top: 5px;
+  font-size: 19px;
+}
+
+/* 그래프 */
+.chart {
+  display: flex;
+  height: 155px;
+  padding: 15px 4px 5px;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.bar-wrap {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 6px;
+}
+
+.bar {
+  width: 100%;
+  max-width: 34px;
+  min-height: 5px;
+  background: linear-gradient(#62a8ff,#2878ff);
+  border-radius: 8px 8px 3px 3px;
+}
+
+.bar-wrap small {
+  color: #7c8ba5;
+  font-size: 9px;
+}
+
+/* 하단 메뉴 */
+.nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 440px;
+  height: 76px;
+  display: grid;
+  grid-template-columns: repeat(5,1fr);
+  padding-bottom: 8px;
+  background: rgba(255,255,255,.97);
+  border-top: 1px solid #e5edf8;
+  z-index: 20;
+}
+
+.nav button {
+  color: #93a0b4;
+  background: none;
+  font-size: 9px;
+  font-weight: bold;
+}
+
+.nav button span {
+  display: block;
+  margin: 7px 0 2px;
+  font-size: 20px;
+}
+
+.nav button.active {
+  color: #2878ff;
+}
+
+/* 제목 */
+.back-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.back {
+  color: #172b4d;
+  background: none;
+  font-size: 25px;
+}
+
+/* 토스트 */
+.toast {
+  position: fixed;
+  bottom: 90px;
+  left: 50%;
+  transform: translate(-50%,20px);
+  opacity: 0;
+  padding: 12px 16px;
+  color: white;
+  background: #172b4d;
+  border-radius: 13px;
+  font-size: 12px;
+  pointer-events: none;
+  transition: .25s;
+  z-index: 50;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translate(-50%,0);
+}
+
+.empty {
+  padding: 20px 5px;
+  color: #7c8ba5;
+  text-align: center;
+  font-size: 12px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<!-- ================= 홈 ================= -->
+<section id="home" class="screen active">
+
+<header class="top">
+
+  <div class="top-row">
+
+    <div>
+      <h1>함께 만드는 전력 절약</h1>
+      <p>우리 교실의 전기를 똑똑하게 관리해요.</p>
+    </div>
+
+    <button class="icon-btn"
+      onclick="showToast('새로운 알림이 없습니다.')">
+      🔔
+    </button>
+
+  </div>
+
+  <div class="room-select">
+    🏫 1학년 1반　⌄
+  </div>
+
+</header>
+
+
+<main class="content">
+
+<div class="card">
+
+  <div class="section-title">
+    오늘의 전력 절약 현황
+  </div>
+
+  <div class="mini-grid">
+
+    <div class="mini">
+      ✓
+      <div class="num" id="checkedMini">0 / 4</div>
+      <small>점검 완료</small>
+    </div>
+
+    <div class="mini">
+      ⚡
+      <div class="num" id="energyMini">0 Wh</div>
+      <small>예상 사용량</small>
+    </div>
+
+    <div class="mini">
+      🌱
+      <div class="num" id="scoreMini">70점</div>
+      <small>절약 점수</small>
+    </div>
+
+  </div>
+
+</div>
+
+
+<div class="section-title">
+전자기기 전원 상태
+</div>
+
+<div class="card status-grid" id="statusGrid"></div>
+
+
+<div id="warningBox"
+     class="alert"
+     style="display:none">
+
+  <div style="font-size:20px">⚠️</div>
+
+  <div>
+    <strong>전력 소비가 많습니다!</strong>
+    <span id="warningText"></span>
+  </div>
+
+</div>
+
+
+<div class="section-title">
+빠른 기능
+</div>
+
+<div class="quick-grid">
+
+  <button class="quick"
+          onclick="go('check')">
+
+    <i>🔌</i>
+    <b>전원 점검</b>
+
+  </button>
+
+  <button class="quick"
+          onclick="go('calc')">
+
+    <i>⚡</i>
+    <b>전력 계산기</b>
+
+  </button>
+
+  <button class="quick"
+          onclick="go('report')">
+
+    <i>🚨</i>
+    <b>낭비 신고</b>
+
+  </button>
+
+</div>
+
+
+<div class="card" style="margin-top:14px">
+
+  <div class="score-row">
+
+    <div>
+
+      <div class="section-title"
+           style="margin:0">
+        오늘의 절약 점수
+      </div>
+
+      <small style="color:#7c8ba5">
+        전원 점검을 완료하면 점수가 올라가요.
+      </small>
+
+    </div>
+
+    <div class="score"
+         id="scoreBig">
+      70
+    </div>
+
+  </div>
+
+  <div class="progress">
+    <div id="scoreBar"
+         style="width:70%">
+    </div>
+  </div>
+
+</div>
+
+</main>
+
+</section>
+
+
+<!-- ================= 전원 점검 ================= -->
+
+<section id="check" class="screen">
+
+<div class="content">
+
+  <div class="back-title">
+
+    <button class="back"
+            onclick="go('home')">
+      ‹
+    </button>
+
+    전원 점검 체크리스트
+
+  </div>
+
+  <p style="font-size:12px;color:#7c8ba5;line-height:1.7">
+    교실을 나가기 전 전자기기의 전원을 확인해 주세요.
+    사용하지 않는 기기는 꺼 주세요.
+  </p>
+
+
+  <div class="card"
+       id="checkList">
+  </div>
+
+
+  <div id="completeBox"></div>
+
+
+  <button class="action secondary"
+          onclick="resetCheck()">
+    ↻ 다시 점검하기
+  </button>
+
+</div>
+
+</section>
+
+
+<!-- ================= 계산기 ================= -->
+
+<section id="calc" class="screen">
+
+<div class="content">
+
+  <div class="back-title">
+
+    <button class="back"
+            onclick="go('home')">
+      ‹
+    </button>
+
+    전력 소비량 계산기
+
+  </div>
+
+  <p style="font-size:12px;color:#7c8ba5;line-height:1.7">
+    소비전력(W)과 사용시간을 입력하면 예상 전력 사용량을 계산합니다.
+  </p>
+
+
+  <div class="card">
+
+    <label class="form-label">
+      기기 선택
+    </label>
+
+    <select id="calcDevice"
+            class="select">
+
+      <option>컴퓨터</option>
+      <option>전자칠판</option>
+      <option>빔프로젝터</option>
+      <option>조명</option>
+
+    </select>
+
+
+    <label class="form-label">
+      소비전력 (W)
+    </label>
+
+    <input id="watts"
+           class="input"
+           type="number"
+           value="100">
+
+
+    <label class="form-label">
+      사용 시간 (시간)
+    </label>
+
+    <input id="hours"
+           class="input"
+           type="number"
+           value="5">
+
+
+    <button class="action"
+            onclick="calculate()">
+
+      계산하기
+
+    </button>
+
+
+    <div class="result">
+
+      <div style="color:#2878ff;font-size:12px;font-weight:bold">
+        ⚡ 예상 전력 사용량
+      </div>
+
+      <div class="big"
+           id="calcResult">
+        500 Wh
+      </div>
+
+      <small id="calcKwh">
+        (0.5 kWh)
+      </small>
+
+    </div>
+
+  </div>
+
+
+  <div class="card">
+
+    <div class="section-title">
+      기기별 전력 사용 예시
+    </div>
+
+    <div id="deviceTable"></div>
+
+  </div>
+
+</div>
+
+</section>
+
+
+<!-- ================= 신고 ================= -->
+
+<section id="report" class="screen">
+
+<div class="content">
+
+  <div class="back-title">
+
+    <button class="back"
+            onclick="go('home')">
+      ‹
+    </button>
+
+    전력 낭비 신고
+
+  </div>
+
+  <p style="font-size:12px;color:#7c8ba5;line-height:1.7">
+    교실에서 발견한 전력 낭비 상황을 알려주세요.
+  </p>
+
+
+  <div class="card">
+
+    <label class="form-label">
+      교실
+    </label>
+
+    <select id="reportRoom"
+            class="select">
+
+      <option>1학년 1반</option>
+      <option>1학년 2반</option>
+      <option>1학년 3반</option>
+      <option>2학년 1반</option>
+
+    </select>
+
+
+    <label class="form-label">
+      전자기기
+    </label>
+
+    <select id="reportDevice"
+            class="select">
+
+      <option>컴퓨터</option>
+      <option>전자칠판</option>
+      <option>빔프로젝터</option>
+      <option>조명</option>
+      <option>기타</option>
+
+    </select>
+
+
+    <label class="form-label">
+      낭비 유형
+    </label>
+
+    <select id="reportType"
+            class="select">
+
+      <option>
+        사용하지 않는데 전원이 켜져 있음
+      </option>
+
+      <option>
+        수업 후 전원 미확인
+      </option>
+
+      <option>
+        조명이 불필요하게 켜져 있음
+      </option>
+
+      <option>
+        기타 전력 낭비
+      </option>
+
+    </select>
+
+
+    <label class="form-label">
+      발견 시간
+    </label>
+
+    <input id="reportTime"
+           class="input"
+           type="datetime-local">
+
+
+    <button class="action"
+            onclick="addReport()">
+
+      🚨 신고 등록
+
+    </button>
+
+  </div>
+
+
+  <div class="card">
+
+    <div class="section-title">
+      신고 목록
+    </div>
+
+    <div id="reportList"></div>
+
+  </div>
+
+</div>
+
+</section>
+
+
+<!-- ================= 통계 ================= -->
+
+<section id="stats" class="screen">
+
+<div class="content">
+
+  <div class="back-title">
+
+    <button class="back"
+            onclick="go('home')">
+      ‹
+    </button>
+
+    전력 절약 통계
+
+  </div>
+
+  <p style="font-size:12px;color:#7c8ba5">
+    우리 교실의 전력 사용과 절약 활동을 확인해요.
+  </p>
+
+
+  <div class="stat-grid">
+
+    <div class="stat">
+      ✓
+      <span> 점검 횟수</span>
+      <b id="statChecks">1회</b>
+    </div>
+
+    <div class="stat">
+      ⚡
+      <span> 총 사용량</span>
+      <b id="statEnergy">0 Wh</b>
+    </div>
+
+    <div class="stat">
+      🚨
+      <span> 신고 횟수</span>
+      <b id="statReports">0건</b>
+    </div>
+
+    <div class="stat">
+      🌱
+      <span> 절약 점수</span>
+      <b id="statScore">70점</b>
+    </div>
+
+  </div>
+
+
+  <div class="card"
+       style="margin-top:14px">
+
+    <div class="section-title">
+      최근 7일 예상 전력 사용량
+    </div>
+
+    <div class="chart"
+         id="chart">
+    </div>
+
+  </div>
+
+
+  <div class="card">
+
+    <div class="section-title">
+      전력 절약 목표
+    </div>
+
+    <div style="padding:15px;background:#f3f8ff;border-radius:16px">
+
+      <div style="
+        display:flex;
+        justify-content:space-between;
+        font-size:12px;
+        font-weight:bold">
+
+        <span>이번 주 목표</span>
+
+        <span id="goalText">
+          0 / 5,000 Wh
+        </span>
+
+      </div>
+
+      <div class="progress">
+
+        <div id="goalBar"
+             style="width:0%">
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+</section>
+
+
+<!-- ================= 하단 메뉴 ================= -->
+
+<nav class="nav">
+
+<button data-nav="home"
+        class="active"
+        onclick="go('home')">
+
+  <span>⌂</span>
+  홈
+
+</button>
+
+
+<button data-nav="check"
+        onclick="go('check')">
+
+  <span>🔌</span>
+  전원 점검
+
+</button>
+
+
+<button data-nav="calc"
+        onclick="go('calc')">
+
+  <span>▣</span>
+  계산기
+
+</button>
+
+
+<button data-nav="report"
+        onclick="go('report')">
+
+  <span>⚠</span>
+  신고
+
+</button>
+
+
+<button data-nav="stats"
+        onclick="go('stats')">
+
+  <span>⋯</span>
+  통계
+
+</button>
+
+</nav>
+
+
+<div id="toast"
+     class="toast">
+</div>
+
+</div>
+
+
+<script>
+
+/* ===============================
+   전자기기 데이터
+================================ */
+
+const devices = [
+
+  {
+    name:"컴퓨터",
+    icon:"💻",
+    power:100
+  },
+
+  {
+    name:"전자칠판",
+    icon:"🖥️",
+    power:200
+  },
+
+  {
+    name:"빔프로젝터",
+    icon:"📽️",
+    power:300
+  },
+
+  {
+    name:"조명",
+    icon:"💡",
+    power:50
+  }
+
+];
+
+
+/* ===============================
+   저장된 데이터 불러오기
+================================ */
+
+let checked =
+JSON.parse(
+  localStorage.getItem("power_checked") || "{}"
+);
+
+let reports =
+JSON.parse(
+  localStorage.getItem("power_reports") || "[]"
+);
+
+let history =
+JSON.parse(
+  localStorage.getItem("power_history") || "[]"
+);
+
+let score =
+Number(
+  localStorage.getItem("power_score") || 70
+);
+
+
+/* ===============================
+   저장
+================================ */
+
+function save(){
+
+  localStorage.setItem(
+    "power_checked",
+    JSON.stringify(checked)
+  );
+
+  localStorage.setItem(
+    "power_reports",
+    JSON.stringify(reports)
+  );
+
+  localStorage.setItem(
+    "power_history",
+    JSON.stringify(history)
+  );
+
+  localStorage.setItem(
+    "power_score",
+    score
+  );
+
+}
+
+
+/* ===============================
+   화면 이동
+================================ */
+
+function go(id){
+
+  document
+    .querySelectorAll(".screen")
+    .forEach(screen=>{
+      screen.classList.remove("active");
+    });
+
+
+  document
+    .getElementById(id)
+    .classList.add("active");
+
+
+  document
+    .querySelectorAll(".nav button")
+    .forEach(button=>{
+
+      button.classList.toggle(
+        "active",
+        button.dataset.nav === id
+      );
+
+    });
+
+
+  renderAll();
+
+  window.scrollTo({
+    top:0,
+    behavior:"smooth"
+  });
+
+}
+
+
+/* ===============================
+   알림
+================================ */
+
+function showToast(message){
+
+  const toast =
+    document.getElementById("toast");
+
+  toast.textContent = message;
+
+  toast.classList.add("show");
+
+  clearTimeout(window.toastTimer);
+
+  window.toastTimer =
+    setTimeout(()=>{
+
+      toast.classList.remove("show");
+
+    },2200);
+
+}
+
+
+/* ===============================
+   예상 전력 사용량
+================================ */
+
+function totalEnergy(){
+
+  return devices.reduce(
+
+    (sum,device)=>{
+
+      return sum +
+        device.power *
+        5 *
+        (checked[device.name] ? 0.5 : 1);
+
+    },
+
+    0
+
+  );
+
+}
+
+
+/* ===============================
+   홈 화면
+================================ */
+
+function renderHome(){
+
+  const count =
+    devices.filter(
+      device=>checked[device.name]
+    ).length;
+
+
+  const energy =
+    Math.round(totalEnergy());
+
+
+  document.getElementById(
+    "checkedMini"
+  ).textContent =
+    `${count} / 4`;
+
+
+  document.getElementById(
+    "energyMini"
+  ).textContent =
+    `${energy} Wh`;
+
+
+  document.getElementById(
+    "scoreMini"
+  ).textContent =
+    `${score}점`;
+
+
+  document.getElementById(
+    "scoreBig"
+  ).textContent =
+    score;
+
+
+  document.getElementById(
+    "scoreBar"
+  ).style.width =
+    score + "%";
+
+
+  document.getElementById(
+    "statusGrid"
+  ).innerHTML =
+
+  devices.map(device=>`
+
+    <div class="device">
+
+      <div class="emoji">
+        ${device.icon}
+      </div>
+
+      <b>
+        ${device.name}
+      </b>
+
+      <span class="${
+        checked[device.name]
+        ? "off"
+        : "on"
+      }">
+
+        ${
+          checked[device.name]
+          ? "OFF"
+          : "ON"
+        }
+
+      </span>
+
+    </div>
+
+  `).join("");
+
+
+  const warning =
+    energy >= 1000;
+
+
+  document.getElementById(
+    "warningBox"
+  ).style.display =
+    warning ? "flex" : "none";
+
+
+  if(warning){
+
+    document.getElementById(
+      "warningText"
+    ).textContent =
+      `현재 예상 사용량 ${energy}Wh입니다. 불필요하게 켜진 기기를 확인해 주세요.`;
+
+  }
+
+}
+
+
+/* ===============================
+   체크리스트
+================================ */
+
+function renderCheck(){
+
+  document.getElementById(
+    "checkList"
+  ).innerHTML =
+
+  devices.map(device=>`
+
+    <div class="toggle-row">
+
+      <div class="toggle-info">
+
+        <div class="toggle-icon">
+          ${device.icon}
+        </div>
+
+        <div>
+
+          <b>
+            ${device.name}
+          </b>
+
+          <small>
+            사용하지 않을 때 전원을 꺼 주세요.
+          </small>
+
+        </div>
+
+      </div>
+
+
+      <button
+        class="switch ${
+          checked[device.name]
+          ? "on"
+          : ""
+        }"
+        onclick="
+          toggleDevice('${device.name}')
+        ">
+      </button>
+
+    </div>
+
+  `).join("");
+
+
+  const all =
+    devices.every(
+      device=>checked[device.name]
+    );
+
+
+  document.getElementById(
+    "completeBox"
+  ).innerHTML =
+
+    all
+
+    ?
+
+    `
+    <div class="complete">
+
+      ✓ 모든 전자기기 점검 완료!
+
+      <br>
+
+      전력 절약 완료!
+
+    </div>
+    `
+
+    :
+
+    "";
+
+}
+
+
+/* ===============================
+   전원 변경
+================================ */
+
+function toggleDevice(name){
+
+  checked[name] =
+    !checked[name];
+
+
+  if(checked[name]){
+
+    score =
+      Math.min(
+        100,
+        score + 5
+      );
+
+    showToast(
+      `${name} 전원을 껐어요.`
+    );
+
+  }
+
+  else{
+
+    score =
+      Math.max(
+        0,
+        score - 5
+      );
+
+    showToast(
+      `${name} 전원을 켰어요.`
+    );
+
+  }
+
+
+  save();
+
+  renderAll();
+
+}
+
+
+/* ===============================
+   체크 초기화
+================================ */
+
+function resetCheck(){
+
+  checked = {};
+
+  save();
+
+  renderAll();
+
+  showToast(
+    "점검 상태를 초기화했어요."
+  );
+
+}
+
+
+/* ===============================
+   계산기
+================================ */
+
+function calculate(){
+
+  const watts =
+    Math.max(
+      0,
+      Number(
+        document.getElementById(
+          "watts"
+        ).value
+      ) || 0
+    );
+
+
+  const hours =
+    Math.max(
+      0,
+      Number(
+        document.getElementById(
+          "hours"
+        ).value
+      ) || 0
+    );
+
+
+  const wh =
+    watts * hours;
+
+
+  const device =
+    document.getElementById(
+      "calcDevice"
+    ).value;
+
+
+  document.getElementById(
+    "calcResult"
+  ).textContent =
+    `${wh.toLocaleString()} Wh`;
+
+
+  document.getElementById(
+    "calcKwh"
+  ).textContent =
+    `(${(wh/1000).toFixed(2)} kWh)`;
+
+
+  history.push({
+
+    device:device,
+
+    wh:wh,
+
+    date:
+      new Date()
+      .toLocaleDateString("ko-KR")
+
+  });
+
+
+  history =
+    history.slice(-30);
+
+
+  save();
+
+  renderStats();
+
+  showToast(
+    `${device}의 전력 사용량을 계산했어요.`
+  );
+
+}
+
+
+/* ===============================
+   기기 예시
+================================ */
+
+function renderTable(){
+
+  document.getElementById(
+    "deviceTable"
+  ).innerHTML =
+
+  devices.map(device=>`
+
+    <div style="
+      display:flex;
+      justify-content:space-between;
+      padding:11px 0;
+      border-bottom:1px solid #e5edf8;
+      font-size:12px">
+
+      <span>
+        ${device.icon}
+        ${device.name}
+      </span>
+
+      <b>
+        ${device.power}W × 5시간
+        =
+        ${(device.power*5).toLocaleString()}Wh
+      </b>
+
+    </div>
+
+  `).join("");
+
+}
+
+
+/* ===============================
+   신고 등록
+================================ */
+
+function addReport(){
+
+  const room =
+    document.getElementById(
+      "reportRoom"
+    ).value;
+
+
+  const device =
+    document.getElementById(
+      "reportDevice"
+    ).value;
+
+
+  const type =
+    document.getElementById(
+      "reportType"
+    ).value;
+
+
+  const time =
+    document.getElementById(
+      "reportTime"
+    ).value ||
+    new Date()
+      .toISOString()
+      .slice(0,16);
+
+
+  reports.unshift({
+
+    room:room,
+
+    device:device,
+
+    type:type,
+
+    time:time,
+
+    status:"대기"
+
+  });
+
+
+  reports =
+    reports.slice(0,20);
+
+
+  score =
+    Math.max(
+      0,
+      score - 1
+    );
+
+
+  save();
+
+  renderAll();
+
+  showToast(
+    "전력 낭비 신고가 등록됐어요."
+  );
+
+}
+
+
+/* ===============================
+   신고 목록
+================================ */
+
+function renderReports(){
+
+  if(!reports.length){
+
+    document.getElementById(
+      "reportList"
+    ).innerHTML =
+
+      `
+      <div class="empty">
+        아직 등록된 신고가 없어요.
+      </div>
+      `;
+
+    return;
+
+  }
+
+
+  document.getElementById(
+    "reportList"
+  ).innerHTML =
+
+  reports.map(
+    (report,index)=>`
+
+      <div class="report-item">
+
+        <span class="
+          badge
+          ${
+            report.status === "해결"
+            ? "done"
+            : "wait"
+          }
+        ">
+
+          ${report.status}
+
+        </span>
+
+
+        <div style="flex:1">
+
+          <b>
+            ${report.room}
+            ·
+            ${report.device}
+          </b>
+
+          <p>
+
+            ${report.type}
+
+            <br>
+
+            ${formatDate(report.time)}
+
+          </p>
+
+        </div>
+
+
+        ${
+          report.status === "대기"
+
+          ?
+
+          `
+          <button
+            onclick="
+              resolveReport(${index})
+            "
+            style="
+              background:#edf8f3;
+              color:#15985f;
+              border-radius:9px;
+              padding:6px;
+              font-size:10px;
+              font-weight:bold">
+
+            해결
+
+          </button>
+          `
+
+          :
+
+          ""
+
+        }
+
+      </div>
+
+    `
+  ).join("");
+
+}
+
+
+/* ===============================
+   신고 해결
+================================ */
+
+function resolveReport(index){
+
+  reports[index].status =
+    "해결";
+
+
+  score =
+    Math.min(
+      100,
+      score + 3
+    );
+
+
+  save();
+
+  renderAll();
+
+  showToast(
+    "신고 처리가 완료됐어요."
+  );
+
+}
+
+
+/* ===============================
+   날짜
+================================ */
+
+function formatDate(value){
+
+  try{
+
+    return new Date(value)
+      .toLocaleString(
+        "ko-KR",
+        {
+          month:"2-digit",
+          day:"2-digit",
+          hour:"2-digit",
+          minute:"2-digit"
+        }
+      );
+
+  }
+
+  catch{
+
+    return value;
+
+  }
+
+}
+
+
+/* ===============================
+   통계
+================================ */
+
+function renderStats(){
+
+  const energy =
+    Math.round(
+      totalEnergy()
+    );
+
+
+  document.getElementById(
+    "statChecks"
+  ).textContent =
+    `${Math.max(1,history.length)}회`;
+
+
+  document.getElementById(
+    "statEnergy"
+  ).textContent =
+    `${energy.toLocaleString()} Wh`;
+
+
+  document.getElementById(
+    "statReports"
+  ).textContent =
+    `${reports.length}건`;
+
+
+  document.getElementById(
+    "statScore"
+  ).textContent =
+    `${score}점`;
+
+
+  const values = [
+
+    420,
+    650,
+    530,
+    720,
+    480,
+    energy,
+    Math.max(
+      350,
+      energy - 80
+    )
+
+  ];
+
+
+  const max =
+    Math.max(...values,1);
+
+
+  document.getElementById(
+    "chart"
+  ).innerHTML =
+
+  values.map(
+    (value,index)=>`
+
+      <div class="bar-wrap">
+
+        <div
+          class="bar"
+          style="
+            height:${
+              Math.max(
+                5,
+                value / max * 105
+              )
+            }px">
+
+        </div>
+
+        <small>
+
+          ${
+            [
+              "월",
+              "화",
+              "수",
+              "목",
+              "금",
+              "토",
+              "일"
+            ][index]
+          }
+
+        </small>
+
+      </div>
+
+    `
+  ).join("");
+
+
+  const goal =
+    Math.min(
+      100,
+      Math.round(
+        energy / 5000 * 100
+      )
+    );
+
+
+  document.getElementById(
+    "goalText"
+  ).textContent =
+    `${energy.toLocaleString()} / 5,000 Wh`;
+
+
+  document.getElementById(
+    "goalBar"
+  ).style.width =
+    goal + "%";
+
+}
+
+
+/* ===============================
+   전체 렌더링
+================================ */
+
+function renderAll(){
+
+  renderHome();
+
+  renderCheck();
+
+  renderTable();
+
+  renderReports();
+
+  renderStats();
+
+}
+
+
+/* ===============================
+   초기 실행
+================================ */
+
+document.getElementById(
+  "reportTime"
+).value =
+  new Date()
+    .toISOString()
+    .slice(0,16);
+
+
+renderAll();
+
+</script>
+
+</body>
+</html>
